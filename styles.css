@@ -65,3 +65,11 @@ nav img {
 nav img:hover {
     opacity: 0.7;
 }
+
+a {
+    color: #0D213D;
+}
+
+a:hover {
+    color: #7A8BA6;
+}
