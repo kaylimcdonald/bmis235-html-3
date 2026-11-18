@@ -36,7 +36,388 @@
      This box is empty on purpose. In Part 7 you paste an interactive
      graphic BETWEEN the opening <div> and the closing </div> below.
      ===================================================================== -->
-<div class="showcase"></div>
+<div class="showcase">
+  <!-- ===== HTML: the map card =====
+     An SVG map of Spain, France, Switzerland and Italy with a pin for each
+     place, a little airplane, and a panel below with buttons and info. -->
+<div class="tm" id="trip-map">
+  <svg class="tm-map" viewBox="0 0 600 360" role="img" aria-label="Map of my top 3 trips: Barcelona, Nice and Lucerne">
+    <rect class="tm-land" width="600" height="360"></rect>
+    <g id="tm-sea"></g>
+    <g id="tm-borders"></g>
+    <g id="tm-labels"></g>
+    <g id="tm-trail"></g>
+    <g id="tm-pins"></g>
+    <g id="tm-plane">
+      <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"></path>
+    </g>
+  </svg>
+
+  <div class="tm-panel">
+    <div class="tm-info">
+      <div class="tm-kicker">My top 3 trips</div>
+      <div class="tm-name" id="tm-name">Where I've flown</div>
+      <div class="tm-blurb" id="tm-blurb">Tap a city or press Play to follow my route.</div>
+      <a class="tm-link" id="tm-link" href="#" hidden>Visit the page &rarr;</a>
+    </div>
+    <div class="tm-buttons">
+      <button type="button" class="tm-btn" data-id="barcelona">Barcelona</button>
+      <button type="button" class="tm-btn" data-id="nice">Nice</button>
+      <button type="button" class="tm-btn" data-id="lucerne">Lucerne</button>
+      <button type="button" class="tm-btn tm-play" id="tm-play">&#9654; Play trip</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CSS: colors, font and layout for the map card =====
+     Every rule starts with .showcase so nothing else on the page changes. -->
+<style>
+  .showcase .tm {
+    font-family: "Libre Baskerville", Georgia, serif;
+    max-width: 560px;
+    margin: 24px auto;
+    padding: 12px;
+    background: #FBF9F5;
+    border: 1px solid #D3DCE8;
+    border-radius: 16px;
+    box-shadow: 0 6px 18px rgba(13, 33, 61, 0.08);
+    color: #0D213D;
+    box-sizing: border-box;
+  }
+  .showcase .tm-map {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .showcase .tm-land { fill: #E8E1D3; }
+  .showcase .tm-water { fill: #D3DCE8; stroke: #B9C6D8; stroke-width: 1; }
+  .showcase .tm-border {
+    fill: none;
+    stroke: #0D213D;
+    stroke-opacity: 0.18;
+    stroke-width: 1;
+    stroke-dasharray: 3 3;
+  }
+  .showcase .tm-country {
+    font-size: 11px;
+    letter-spacing: 3px;
+    fill: #0D213D;
+    fill-opacity: 0.35;
+  }
+  .showcase .tm-sea-label {
+    font-size: 12px;
+    font-style: italic;
+    fill: #0D213D;
+    fill-opacity: 0.45;
+  }
+  .showcase .tm-city {
+    font-size: 14px;
+    font-weight: bold;
+    fill: #0D213D;
+    stroke: #E8E1D3;
+    stroke-width: 4px;
+    paint-order: stroke;
+  }
+  .showcase .tm-pin { cursor: pointer; }
+  .showcase .tm-pin:focus { outline: none; }
+  .showcase .tm-halo {
+    fill: #0D213D;
+    opacity: 0.12;
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: opacity 0.3s, transform 0.3s;
+  }
+  .showcase .tm-pin:hover .tm-halo,
+  .showcase .tm-pin:focus .tm-halo,
+  .showcase .tm-pin.is-active .tm-halo {
+    opacity: 0.28;
+    transform: scale(1.5);
+  }
+  .showcase .tm-dot { fill: #0D213D; stroke: #FBF9F5; stroke-width: 2; }
+  .showcase .tm-trail-dot { fill: #0D213D; opacity: 0.65; }
+  .showcase #tm-plane path { fill: #0D213D; stroke: #FBF9F5; stroke-width: 1; }
+  .showcase .tm-compass { fill: none; stroke: #0D213D; stroke-opacity: 0.35; }
+  .showcase .tm-compass-n { font-size: 11px; fill: #0D213D; fill-opacity: 0.55; }
+
+  .showcase .tm-panel {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 4px 2px;
+  }
+  .showcase .tm-info { flex: 1 1 220px; min-width: 0; }
+  .showcase .tm-kicker {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0.6;
+  }
+  .showcase .tm-name { font-size: 20px; font-weight: bold; margin: 2px 0; }
+  .showcase .tm-blurb { font-size: 13px; line-height: 1.5; }
+  .showcase .tm-link {
+    display: inline-block;
+    margin-top: 4px;
+    font-size: 13px;
+    color: #0D213D;
+    text-decoration: underline;
+  }
+  .showcase .tm-link:hover { color: #5A6F8F; }
+  .showcase .tm-link[hidden] { display: none; }
+  .showcase .tm-buttons { display: flex; flex-wrap: wrap; gap: 6px; }
+  .showcase .tm-btn {
+    font-family: inherit;
+    font-size: 13px;
+    padding: 6px 12px;
+    border: 1px solid #0D213D;
+    border-radius: 999px;
+    background: transparent;
+    color: #0D213D;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+  .showcase .tm-btn:hover { background: #D3DCE8; }
+  .showcase .tm-btn.is-active { background: #0D213D; color: #E8E1D3; }
+  .showcase .tm-play { background: #D3DCE8; }
+  .showcase .tm-btn:focus-visible { outline: 2px solid #0D213D; outline-offset: 2px; }
+</style>
+
+<!-- ===== JavaScript: draws the map and flies the airplane =====
+     It turns real map coordinates into spots on the picture, adds the pins,
+     and moves the plane along a curved path, dropping a dotted trail. -->
+<script>
+(function () {
+  var NS = "http://www.w3.org/2000/svg";
+  var root = document.getElementById("trip-map");
+  if (!root) return;
+  var svg = root.querySelector(".tm-map");
+
+  /* turn longitude/latitude into x/y on the 600 x 360 picture */
+  function P(lon, lat) {
+    return [(lon + 5) * 600 / 19, (49.5 - lat) * 360 / 11.5];
+  }
+  function make(tag, attrs, parent) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function pathFrom(list, close) {
+    return "M" + list.map(function (p) {
+      var q = P(p[0], p[1]);
+      return q[0].toFixed(1) + " " + q[1].toFixed(1);
+    }).join(" L") + (close ? " Z" : "");
+  }
+
+  /* ---- water: Atlantic, Mediterranean, Adriatic and lakes ---- */
+  var sea = svg.querySelector("#tm-sea");
+  var water = [
+    [[-7, 51], [1.4, 51], [1.4, 50.06], [1.1, 49.93], [0.1, 49.5], [-0.3, 49.3],
+     [-1.25, 49.6], [-1.6, 49.65], [-1.85, 49.4], [-1.6, 48.8], [-2.0, 48.65],
+     [-3.0, 48.8], [-4.6, 48.4], [-4.3, 48.1], [-4.4, 47.8], [-3.4, 47.7],
+     [-2.5, 47.3], [-2.2, 47.2], [-1.8, 46.5], [-1.2, 46.15], [-1.1, 45.6],
+     [-1.2, 44.6], [-1.55, 43.45], [-3.8, 43.45], [-5.7, 43.55], [-7, 43.6]],
+    [[-6, 37], [-1.0, 37.6], [-0.7, 37.6], [-0.5, 38.3], [0.2, 38.75], [-0.3, 39.45],
+     [0.0, 40.0], [0.9, 40.7], [1.25, 41.1], [2.2, 41.4], [3.2, 41.9], [3.3, 42.3],
+     [3.05, 42.7], [3.1, 43.1], [3.7, 43.4], [4.0, 43.55], [4.6, 43.4], [5.35, 43.3],
+     [5.9, 43.1], [6.65, 43.25], [7.27, 43.68], [8.0, 43.88], [8.48, 44.3],
+     [8.93, 44.41], [9.85, 44.1], [10.3, 43.55], [10.5, 42.95], [11.1, 42.7],
+     [11.8, 42.1], [12.3, 41.75], [13.5, 41.2], [14.2, 40.8], [16, 40.5], [16, 37]],
+    [[12.35, 45.45], [12.28, 45.2], [12.5, 44.9], [12.3, 44.4], [12.6, 44.05],
+     [12.9, 43.9], [13.55, 43.6], [13.9, 43.0], [14.2, 42.45], [15, 42.2],
+     [15, 44.8], [13.9, 44.85], [13.6, 45.3], [13.75, 45.65], [13.1, 45.78], [12.6, 45.6]]
+  ];
+  water.forEach(function (w) { make("path", { d: pathFrom(w, true), "class": "tm-water" }, sea); });
+
+  /* islands sit on top of the sea */
+  var islands = [
+    [[9.4, 43.0], [9.55, 42.6], [9.5, 42.0], [9.2, 41.4], [8.8, 41.6], [8.6, 41.9], [8.6, 42.4], [9.0, 42.7]],
+    [[9.2, 41.25], [9.8, 40.9], [9.65, 40.0], [9.55, 39.15], [9.0, 39.0], [8.4, 38.9], [8.4, 39.6], [8.2, 40.6], [8.6, 40.9]],
+    [[2.35, 39.55], [3.1, 39.95], [3.45, 39.75], [3.25, 39.35], [2.75, 39.35]],
+    [[3.8, 40.0], [4.3, 40.05], [4.25, 39.82], [3.85, 39.9]],
+    [[1.2, 38.95], [1.45, 39.1], [1.6, 38.98], [1.35, 38.85]]
+  ];
+  islands.forEach(function (w) { make("path", { d: pathFrom(w, true), "class": "tm-land" }, sea); });
+
+  [[6.55, 46.42, 13, 4, -12], [9.4, 47.6, 9, 4, -25]].forEach(function (l) {
+    var q = P(l[0], l[1]);
+    make("ellipse", { cx: q[0], cy: q[1], rx: l[2], ry: l[3],
+      transform: "rotate(" + l[4] + " " + q[0] + " " + q[1] + ")", "class": "tm-water" }, sea);
+  });
+
+  /* ---- soft dashed country borders ---- */
+  var borders = svg.querySelector("#tm-borders");
+  [
+    [[-1.78, 43.36], [-0.7, 42.85], [0.7, 42.7], [1.7, 42.5], [3.17, 42.43]],
+    [[7.53, 43.78], [7.0, 44.2], [6.85, 44.5], [7.0, 45.0], [6.8, 45.15], [7.05, 45.92]],
+    [[5.96, 46.14], [6.25, 46.3], [6.8, 46.4], [6.8, 46.0], [7.05, 45.92], [7.9, 45.95],
+     [8.4, 46.45], [9.0, 45.82], [9.3, 46.5], [10.15, 46.25], [10.45, 46.55], [10.45, 46.9],
+     [9.6, 47.06], [9.55, 47.5], [8.6, 47.8], [7.6, 47.58], [6.95, 47.5], [6.1, 46.9],
+     [6.1, 46.6], [5.96, 46.14]],
+    [[7.6, 47.58], [7.55, 48.1], [7.8, 48.6], [8.2, 48.97], [7.0, 49.15], [6.4, 49.47],
+     [5.8, 49.5], [4.8, 50]],
+    [[10.45, 46.9], [12.2, 47.0], [13.7, 46.5], [13.75, 45.65]]
+  ].forEach(function (b) { make("path", { d: pathFrom(b, false), "class": "tm-border" }, borders); });
+
+  /* ---- country and sea names ---- */
+  var labels = svg.querySelector("#tm-labels");
+  function label(text, lon, lat, cls) {
+    var q = P(lon, lat);
+    var t = make("text", { x: q[0], y: q[1], "class": cls, "text-anchor": "middle" }, labels);
+    t.textContent = text;
+  }
+  label("SPAIN", -2.5, 40.4, "tm-country");
+  label("FRANCE", 2.3, 46.6, "tm-country");
+  label("ITALY", 11.3, 44.8, "tm-country");
+  label("Mediterranean Sea", 5.6, 40.0, "tm-sea-label");
+
+  /* little compass in the top-right corner */
+  make("circle", { cx: 570, cy: 34, r: 14, "class": "tm-compass" }, labels);
+  make("path", { d: "M570 22 L574 34 L570 46 L566 34 Z", "class": "tm-compass" }, labels);
+  var n = make("text", { x: 570, y: 16, "text-anchor": "middle", "class": "tm-compass-n" }, labels);
+  n.textContent = "N";
+
+  /* ---- the three places (edit the blurbs to say what you want) ---- */
+  var places = [
+    { id: "barcelona", name: "Barcelona", lon: 2.17, lat: 41.39, page: "barcelona.html",
+      blurb: "Warm weather, a huge beach and Gaudí's amazing buildings.", dx: -14, dy: 22, anchor: "end" },
+    { id: "nice", name: "Nice", lon: 7.27, lat: 43.70, page: "nice.html",
+      blurb: "Bright blue water and sunny walks along the French Riviera.", dx: 14, dy: 18, anchor: "start" },
+    { id: "lucerne", name: "Lucerne", lon: 8.31, lat: 47.05, page: "lucerne.html",
+      blurb: "A calm lake surrounded by the Swiss Alps.", dx: 16, dy: 5, anchor: "start" }
+  ];
+
+  var pinLayer = svg.querySelector("#tm-pins");
+  places.forEach(function (pl) {
+    var q = P(pl.lon, pl.lat);
+    pl.x = q[0];
+    pl.y = q[1];
+    var g = make("g", { "class": "tm-pin", tabindex: "0", role: "button", "aria-label": "Fly to " + pl.name }, pinLayer);
+    make("circle", { cx: q[0], cy: q[1], r: 13, "class": "tm-halo" }, g);
+    make("circle", { cx: q[0], cy: q[1], r: 6, "class": "tm-dot" }, g);
+    var t = make("text", { x: q[0] + pl.dx, y: q[1] + pl.dy, "text-anchor": pl.anchor, "class": "tm-city" }, g);
+    t.textContent = pl.name;
+    pl.pin = g;
+    g.addEventListener("click", function () { go(pl); });
+    g.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(pl); }
+    });
+  });
+  function byId(id) {
+    for (var i = 0; i < places.length; i++) if (places[i].id === id) return places[i];
+  }
+
+  /* ---- info panel and buttons ---- */
+  var nameEl = root.querySelector("#tm-name");
+  var blurbEl = root.querySelector("#tm-blurb");
+  var linkEl = root.querySelector("#tm-link");
+  var buttons = root.querySelectorAll(".tm-btn[data-id]");
+
+  function show(pl) {
+    nameEl.textContent = pl.name;
+    blurbEl.textContent = pl.blurb;
+    linkEl.href = pl.page;
+    linkEl.textContent = "Visit the " + pl.name + " page →";
+    linkEl.hidden = false;
+    places.forEach(function (p) { p.pin.classList.toggle("is-active", p === pl); });
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].classList.toggle("is-active", buttons[i].getAttribute("data-id") === pl.id);
+    }
+  }
+
+  /* ---- the airplane ---- */
+  var plane = svg.querySelector("#tm-plane");
+  var trail = svg.querySelector("#tm-trail");
+  var current = places[0];
+  var busy = false;
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function placePlane(x, y, angle) {
+    plane.setAttribute("transform",
+      "translate(" + x.toFixed(1) + " " + y.toFixed(1) + ") rotate(" + (angle + 90).toFixed(1) + ") translate(-11.5 -12)");
+  }
+  /* the plane hovers just above a pin so the pin stays visible */
+  var planeX = current.x, planeY = current.y - 20;
+  placePlane(planeX, planeY, -35);
+
+  function clearTrail() {
+    while (trail.firstChild) trail.removeChild(trail.firstChild);
+  }
+
+  function fly(target, done) {
+    if (target === current) { show(target); if (done) done(); return; }
+    busy = true;
+    var x0 = planeX, y0 = planeY, x1 = target.x, y1 = target.y - 20;
+    var dx = x1 - x0, dy = y1 - y0, dist = Math.sqrt(dx * dx + dy * dy);
+    /* bend the path into a gentle arc */
+    var cx = (x0 + x1) / 2 + (dy / dist) * dist * 0.3;
+    var cy = (y0 + y1) / 2 - (dx / dist) * dist * 0.3;
+    if (cy > (y0 + y1) / 2) { cx = (x0 + x1) / 2 - (dy / dist) * dist * 0.3; cy = (y0 + y1) / 2 + (dx / dist) * dist * 0.3; }
+    var route = make("path", { d: "M" + x0 + " " + y0 + " Q" + cx + " " + cy + " " + x1 + " " + y1,
+      fill: "none", stroke: "none" }, trail);
+    var total = route.getTotalLength();
+    var duration = reduceMotion ? 1 : Math.min(2200, 900 + total * 4);
+    var nextDot = 10;
+    var start = null;
+
+    function step(now) {
+      if (start === null) start = now;
+      var t = Math.min(1, (now - start) / duration);
+      var e = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+      var len = e * total;
+      var p = route.getPointAtLength(len);
+      var a = route.getPointAtLength(Math.min(total, len + 1));
+      var b = route.getPointAtLength(Math.max(0, len - 1));
+      var angle = Math.atan2(a.y - b.y, a.x - b.x) * 180 / Math.PI;
+      placePlane(p.x, p.y, angle);
+      while (nextDot <= len - 12) {
+        var d = route.getPointAtLength(nextDot);
+        make("circle", { cx: d.x.toFixed(1), cy: d.y.toFixed(1), r: 1.8, "class": "tm-trail-dot" }, trail);
+        nextDot += 9;
+      }
+      if (t < 1) {
+        requestAnimationFrame(step);
+      } else {
+        trail.removeChild(route);
+        planeX = x1;
+        planeY = y1;
+        current = target;
+        busy = false;
+        show(target);
+        if (done) done();
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  function go(pl) {
+    if (busy) return;
+    clearTrail();
+    fly(pl);
+  }
+
+  for (var i = 0; i < buttons.length; i++) {
+    buttons[i].addEventListener("click", function () { go(byId(this.getAttribute("data-id"))); });
+  }
+
+  /* Play: fly Barcelona -> Nice -> Lucerne in order */
+  root.querySelector("#tm-play").addEventListener("click", function () {
+    if (busy) return;
+    clearTrail();
+    var stops = places.slice();
+    function next() {
+      if (!stops.length) return;
+      var s = stops.shift();
+      fly(s, function () { setTimeout(next, s === current && stops.length ? 700 : 0); });
+    }
+    next();
+  });
+})();
+</script>
+</div>
 
 <!-- Footer: fill in your name -->
 <footer>Built by Kayli McDonald &middot; BMIS 235</footer>
