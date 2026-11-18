@@ -8,9 +8,10 @@
    Use the same font and colors you picked for your Excel menu images,
    so the menu and the pages look like one brand.
    ===================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville&display=swap');
 
 body {
-    font-family: Georgia, "Libre Baskerville", serif;
+    font-family: "Libre Baskerville", Georgia, serif;
     background-color: #E8E1D3;
     color: #2b2b2b;
     margin: 0;
